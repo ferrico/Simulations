@@ -1,0 +1,258 @@
+//
+// ********************************************************************
+// * License and Disclaimer                                           *
+// *                                                                  *
+// * The  Geant4 software  is  copyright of the Copyright Holders  of *
+// * the Geant4 Collaboration.  It is provided  under  the terms  and *
+// * conditions of the Geant4 Software License,  included in the file *
+// * LICENSE and available at  http://cern.ch/geant4/license .  These *
+// * include a list of copyright holders.                             *
+// *                                                                  *
+// * Neither the authors of this software system, nor their employing *
+// * institutes,nor the agencies providing financial support for this *
+// * work  make  any representation or  warranty, express or implied, *
+// * regarding  this  software system or assume any liability for its *
+// * use.  Please see the license in the file  LICENSE  and URL above *
+// * for the full disclaimer and the limitation of liability.         *
+// *                                                                  *
+// * This  code  implementation is the result of  the  scientific and *
+// * technical work of the GEANT4 collaboration.                      *
+// * By using,  copying,  modifying or  distributing the software (or *
+// * any work based  on the software)  you  agree  to acknowledge its *
+// * use  in  resulting  scientific  publications,  and indicate your *
+// * acceptance of all terms of the Geant4 Software license.          *
+// ********************************************************************
+//
+// $Id: B1RunAction.cc 99560 2016-09-27 07:03:29Z gcosmo $
+//
+/// \file B1RunAction.cc
+/// \brief Implementation of the B1RunAction class
+
+#include "FTMRunAction.hh"
+#include "FTMPrimaryGeneratorAction.hh"
+#include "FTMDetectorConstruction.hh"
+// #include "FTMRun.hh"
+#include "FTMAnalysis.hh"
+
+#include "G4RunManager.hh"
+#include "G4Run.hh"
+#include "G4AccumulableManager.hh"
+#include "G4LogicalVolumeStore.hh"
+#include "G4LogicalVolume.hh"
+#include "G4UnitsTable.hh"
+#include "G4SystemOfUnits.hh"
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+FTMRunAction::FTMRunAction()
+: G4UserRunAction(),
+  fEdep(0.),
+  fEdep2(0.)
+{
+  // set printing event number per each event
+  G4RunManager::GetRunManager()->SetPrintProgress(1);
+  
+  // add new units for dose
+  //
+  new G4UnitDefinition("au" , "au"  , "Arbitrary", 1.0*m/m);
+  const G4double nanogray  = 1.e-9*gray;
+  new G4UnitDefinition("nanogray" , "nanoGy"  , "Dose", nanogray);
+    
+  // Register accumulable to the accumulable manager
+  auto accumulableManager = G4AccumulableManager::Instance();
+  accumulableManager->RegisterAccumulable(fEdep);
+  accumulableManager->RegisterAccumulable(fEdep2);
+    
+  // Create analysis manager
+  // The choice of analysis technology is done via selectin of a namespace
+  // in FTMAnalysis.hh
+  auto analysisManager = G4AnalysisManager::Instance();
+  G4cout << "Using " << analysisManager->GetType() << G4endl;
+  analysisManager->SetVerboseLevel(1);
+  analysisManager->SetNtupleMerging(true);
+  analysisManager->SetFileName("FTM_results");
+  //analysisManager->SetFirstHistoId(1);
+  // Book histograms, ntuple
+  //
+  // Creating histograms
+  /*ID 0*/ analysisManager->CreateH1("Nevents","Total number of events", 2, 0., 2);
+  /*ID 1*/ analysisManager->CreateH1("Nprimaries","Total number of primary particles on the FR4 surface per event", 5, 0., 5);
+  /*ID 2*/ analysisManager->CreateH1("Nsecondaries_gen","Total number of secondary particles produced by the primary per event", 5, 0., 5);
+  /*ID 3*/ analysisManager->CreateH1("Nsecondaries_out","Total number of secondary electrons outcoming from FR4 per event", 10, 0., 10);
+
+  /*ID 4*/ analysisManager->CreateH1("Nprimaries_count","Counting primaries gamma", 5, 0., 5);
+  /*ID 5*/ analysisManager->CreateH1("Nsecondaries_count","Counting secondary electrons", 5, 0., 5);
+  /*ID 6*/ analysisManager->CreateH1("EabsFR4","Edep in FR4", 1000, 0., 1*MeV);
+  /*ID 7*/ analysisManager->CreateH1("EkSecondaries","Ek of secondariy electrons outside FR4", 1000, 0., 1*MeV);
+
+
+    
+  // Creating ntuple
+  //
+  analysisManager->CreateNtuple("FTM", "Event information");
+  /*ID 0*/ analysisManager->CreateNtupleDColumn("EventID");
+  /*ID 1*/ analysisManager->CreateNtupleDColumn("Nprimaries");
+  /*ID 2*/ analysisManager->CreateNtupleDColumn("Nsecondaries_gen");
+  /*ID 3*/ analysisManager->CreateNtupleDColumn("Nsecondaries_out");
+    
+  /*ID 4*/ analysisManager->CreateNtupleDColumn("Nsecondaries_out");
+  /*ID 5*/ analysisManager->CreateNtupleDColumn("Nsecondaries_out");
+  /*ID 6*/ analysisManager->CreateNtupleDColumn("EabsFR4");
+  /*ID 7*/ analysisManager->CreateNtupleDColumn("EkSecondaries");
+  
+
+  analysisManager->FinishNtuple();
+  
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+FTMRunAction::~FTMRunAction()
+{
+  delete G4AnalysisManager::Instance();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void FTMRunAction::BeginOfRunAction(const G4Run* run)
+{
+  //G4cout << "--- Run ID: " << run->GetRunID() << G4endl;
+    
+  // inform the runManager to save random number seed
+  G4RunManager::GetRunManager()->SetRandomNumberStore(false);
+
+  // reset accumulables to their initial values
+  G4AccumulableManager* accumulableManager = G4AccumulableManager::Instance();
+  accumulableManager->Reset();
+    
+  //histograms
+  //
+  auto analysisManager = G4AnalysisManager::Instance();
+  //if ( analysisManager->IsActive() ) {
+  // Open an output file
+  //G4String fileName = "FTM_results";
+  //analysisManager->OpenFile(fileName);
+  analysisManager->OpenFile();
+  //}
+
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void FTMRunAction::EndOfRunAction(const G4Run* run)
+{
+  G4int nofEvents = run->GetNumberOfEvent();
+  if (nofEvents == 0) return;
+
+  // Merge accumulables 
+  auto accumulableManager = G4AccumulableManager::Instance();
+  accumulableManager->Merge();
+
+  // Compute dose = total energy deposit in a run and its variance
+  //
+  G4double edep  = fEdep.GetValue();
+  G4double edep2 = fEdep2.GetValue();
+  
+  G4double rms = edep2 - edep*edep/nofEvents;
+  if (rms > 0.) rms = std::sqrt(rms); else rms = 0.;  
+
+  const FTMDetectorConstruction* detectorConstruction
+   = static_cast<const FTMDetectorConstruction*>
+     (G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+  G4double mass = detectorConstruction->GetScoringVolume()->GetMass();
+  G4double dose = edep/mass;
+  G4double rmsDose = rms/mass;
+  
+  // print histograms statistics
+  auto analysisManager = G4AnalysisManager::Instance();
+    if ( analysisManager->GetH1(1) ) {
+        G4cout << G4endl << " ----> print histograms statistic ";
+        if(isMaster) {
+            G4cout << "for the entire run " << G4endl << G4endl;
+        }
+        else {
+            G4cout << "for the local thread " << G4endl << G4endl;
+        }
+        
+        G4cout << " EAbs : mean = "
+        << G4BestUnit(analysisManager->GetH1(0)->mean(), "Energy")
+        << " rms = "
+        << G4BestUnit(analysisManager->GetH1(0)->rms(),  "Energy") << G4endl;
+        
+        /*G4cout << " EGap : mean = "
+        << G4BestUnit(analysisManager->GetH1(1)->mean(), "Energy")
+        << " rms = "
+        << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Energy") << G4endl;
+        
+        G4cout << " LAbs : mean = "
+        << G4BestUnit(analysisManager->GetH1(2)->mean(), "Length")
+        << " rms = "
+        << G4BestUnit(analysisManager->GetH1(2)->rms(),  "Length") << G4endl;
+        
+        G4cout << " LGap : mean = "
+        << G4BestUnit(analysisManager->GetH1(3)->mean(), "Length")
+        << " rms = "
+        << G4BestUnit(analysisManager->GetH1(3)->rms(),  "Length") << G4endl;*/
+    }
+    
+  //save histograms
+  //if ( analysisManager->IsActive() ) {
+  analysisManager->Write();
+  analysisManager->CloseFile();
+  //}
+  
+  //////////////////////////////////////////
+  // Run conditions and Print Results
+  //  note: There is no primary generator action object for "master"
+  //        run manager for multi-threaded mode.
+  const FTMPrimaryGeneratorAction* generatorAction
+   = static_cast<const FTMPrimaryGeneratorAction*>
+     (G4RunManager::GetRunManager()->GetUserPrimaryGeneratorAction());
+  G4String runCondition;
+  if (generatorAction)
+  {
+    const G4ParticleGun* particleGun = generatorAction->GetParticleGun();
+    runCondition += particleGun->GetParticleDefinition()->GetParticleName();
+    runCondition += " of ";
+    G4double particleEnergy = particleGun->GetParticleEnergy();
+    runCondition += G4BestUnit(particleEnergy,"Energy");
+  }
+        
+  // Print
+  //  
+  if (IsMaster()) {
+    G4cout
+     << G4endl
+     << "--------------------End of Global Run-----------------------";
+  }
+  else {
+    G4cout
+     << G4endl
+     << "--------------------End of Local Run------------------------";
+  }
+  
+  G4cout
+     << G4endl
+     << " The run consists of " << nofEvents << " "<< runCondition
+     << G4endl
+     << " Cumulated dose per run, in scoring volume : " 
+     << G4BestUnit(dose,"Dose") << " rms = " << G4BestUnit(rmsDose,"Dose")
+     << G4endl
+     << "------------------------------------------------------------"
+     << G4endl
+     << G4endl;
+  
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void FTMRunAction::AddEvents(G4double edep)
+{
+  fEdep  += edep;
+  fEdep2 += edep*edep;
+}
+
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+

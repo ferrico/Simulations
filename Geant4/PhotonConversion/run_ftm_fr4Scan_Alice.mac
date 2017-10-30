@@ -1,0 +1,189 @@
+# Macro file for example B1
+# 
+# Can be run in batch, without graphic
+# or interactively: Idle> /control/execute run1.mac
+#
+# Change the default number of workers (in multi-threading mode) 
+#/run/numberOfWorkers 4
+#/run/numberOfWorkers 1
+#
+# Initialize kernel
+/run/initialize
+#
+# Verbose
+/control/verbose 2
+/run/verbose 2
+/event/verbose 0
+/tracking/verbose 0
+#
+# gamma 100 keV to the direction (0.,0.,1.)
+#
+
+########### 0.2 mm FR4
+/gun/particle gamma
+/gun/energy 100 keV
+/FTM/detector/fr4Thickness 0.2 mm
+# (0.2 mm + 1mm)/2 = 0.6 mm (initial position of my gun)
+/gun/position 0. 0. -0.6 mm
+/analysis/setFileName FTM_100keV_fr4_200um
+
+#/run/beamOn 10000000
+
+########### 0.5 mm FR4
+/gun/particle gamma
+/gun/energy 100 keV
+/FTM/detector/fr4Thickness 0.5 mm
+# (0.5 mm + 1mm)/2 = 0.75 mm (initial position of my gun)
+/gun/position 0. 0. -0.75 mm
+/analysis/setFileName FTM_100keV_fr4_500um
+
+#/run/beamOn 10000000
+
+########### 1. mm FR4
+/gun/particle gamma
+/gun/energy 100 keV
+/FTM/detector/fr4Thickness 1. mm
+# (1. mm + 1mm)/2 = 1. mm (initial position of my gun)
+/gun/position 0. 0. -1. mm
+/analysis/setFileName FTM_100keV_fr4_1000um
+
+#/run/beamOn 10000000
+
+########### 1.5 mm FR4
+/gun/particle gamma
+/gun/energy 100 keV
+/FTM/detector/fr4Thickness 1.5 mm
+# (1.5 mm + 1mm)/2 = 1.25 mm (initial position of my gun)
+/gun/position 0. 0. -1.25 mm
+/analysis/setFileName FTM_100keV_fr4_1500um
+
+#/run/beamOn 10000000
+
+########### 2. mm FR4
+/gun/particle gamma
+/gun/energy 511 keV
+/FTM/detector/fr4Thickness 2. mm
+# (2. mm + 1mm)/2 = 1.5 mm (initial position of my gun)
+/gun/position 0. 0. -1.5 mm
+/analysis/setFileName FTM_511keV_fr4_2000um
+
+##/run/beamOn 1000000
+
+
+#
+# gamma 1 MeV to the direction (0.,0.,1.)
+#
+
+########### 0.1 mm FR4
+/gun/particle gamma
+/gun/energy 1 MeV
+/FTM/detector/fr4Thickness 0.1 mm
+# (0.1 mm + 1mm)/2 = 0.55 mm (initial position of my gun)
+/gun/position 0. 0. -0.55 mm
+/analysis/setFileName FTM_1MeV_fr4_100um
+
+/run/beamOn 1000000
+
+########### 0.2 mm FR4
+/gun/particle gamma
+/gun/energy 1 MeV
+/FTM/detector/fr4Thickness 0.2 mm
+# (0.2 mm + 1mm)/2 = 0.6 mm (initial position of my gun)
+/gun/position 0. 0. -0.6 mm
+/analysis/setFileName FTM_1MeV_fr4_200um
+
+#/run/beamOn 1000000
+
+########### 0.5 mm FR4
+/gun/particle gamma
+/gun/energy 1 MeV
+/FTM/detector/fr4Thickness 0.5 mm
+# (0.5 mm + 1mm)/2 = 0.75 mm (initial position of my gun)
+/gun/position 0. 0. -0.75 mm
+/analysis/setFileName FTM_1MeV_fr4_500um
+
+#/run/beamOn 1000000
+
+########### 1. mm FR4
+/gun/particle gamma
+/gun/energy 1 MeV
+/FTM/detector/fr4Thickness 1. mm
+# (1. mm + 1mm)/2 = 1. mm (initial position of my gun)
+/gun/position 0. 0. -1. mm
+/analysis/setFileName FTM_1MeV_fr4_1000um
+
+#/run/beamOn 1000000
+
+########### 1.5 mm FR4
+/gun/particle gamma
+/gun/energy 1 MeV
+/FTM/detector/fr4Thickness 1.5 mm
+# (1.5 mm + 1mm)/2 = 1.25 mm (initial position of my gun)
+/gun/position 0. 0. -1.25 mm
+/analysis/setFileName FTM_1MeV_fr4_1500um
+
+#/run/beamOn 1000000
+
+########### 2. mm FR4
+/gun/particle gamma
+/gun/energy 1 MeV
+/FTM/detector/fr4Thickness 2. mm
+# (2. mm + 1mm)/2 = 1.5 mm (initial position of my gun)
+/gun/position 0. 0. -1.5 mm
+/analysis/setFileName FTM_1MeV_fr4_2000um
+
+#/run/beamOn 1000000
+
+#
+# gamma 10 MeV to the direction (0.,0.,1.)
+#
+
+########### 0.2 mm FR4
+/gun/particle gamma
+/gun/energy 10 MeV
+/FTM/detector/fr4Thickness 0.2 mm
+# (0.2 mm + 1mm)/2 = 0.6 mm (initial position of my gun)
+/gun/position 0. 0. -0.6 mm
+/analysis/setFileName FTM_10MeV_fr4_200um
+
+#/run/beamOn 1000000
+
+########### 0.5 mm FR4
+/gun/particle gamma
+/gun/energy 10 MeV
+/FTM/detector/fr4Thickness 0.5 mm
+# (0.5 mm + 1mm)/2 = 0.75 mm (initial position of my gun)
+/gun/position 0. 0. -0.75 mm
+/analysis/setFileName FTM_10MeV_fr4_500um
+
+#/run/beamOn 1000000
+
+########### 1. mm FR4
+/gun/particle gamma
+/gun/energy 10 MeV
+/FTM/detector/fr4Thickness 1. mm
+# (1. mm + 1mm)/2 = 1. mm (initial position of my gun)
+/gun/position 0. 0. -1. mm
+/analysis/setFileName FTM_10MeV_fr4_1000um
+
+#/run/beamOn 1000000
+
+########### 1.5 mm FR4
+/gun/particle gamma
+/gun/energy 10 MeV
+/FTM/detector/fr4Thickness 1.5 mm
+# (1.5 mm + 1mm)/2 = 1.25 mm (initial position of my gun)
+/gun/position 0. 0. -1.25 mm
+/analysis/setFileName FTM_10MeV_fr4_1500um
+
+#/run/beamOn 1000000
+
+########### 2. mm FR4
+/gun/particle gamma
+/gun/energy 10 MeV
+/FTM/detector/fr4Thickness 2. mm
+# (2. mm + 1mm)/2 = 1.5 mm (initial position of my gun)
+/gun/position 0. 0. -1.5 mm
+/analysis/setFileName FTM_10MeV_fr4_2000um
+
+#/run/beamOn 1000000
